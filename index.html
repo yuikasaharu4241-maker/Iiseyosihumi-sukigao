@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>私の好き顔9選</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      text-align: center;
+      margin: 0;
+      padding: 20px 10px;
+    }
+    h1 {
+      font-size: 22px;
+      margin-bottom: 5px;
+    }
+    p {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      max-width: 400px;
+      margin: 0 auto 30px;
+    }
+    .card {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      cursor: pointer;
+      background: #ddd;
+    }
+    .card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .card.selected::after {
+      content: '✓';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255, 105, 180, 0.5);
+      color: white;
+      font-size: 32px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .result-container {
+      display: none;
+      margin-top: 30px;
+    }
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      width: 300px;
+      height: 300px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 10px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+    .result-grid img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+    .btn {
+      background-color: #ff69b4;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 25px;
+      cursor: pointer;
+      margin-top: 20px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+    .btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>好きな顔を選ぼう！</h1>
+  <p>一覧から画像をタップして <strong>9枚</strong> 選んでください（<span id="count">0</span>/9）</p>
+
+  <div class="grid" id="photoGrid"></div>
+
+  <button class="btn" id="finishBtn" disabled onclick="showResult()">9選を完成させる！</button>
+
+  <div class="result-container" id="resultArea">
+    <h2>✨ あなたの好き顔9選 ✨</h2>
+    <div class="result-grid" id="resultGrid"></div>
+  </div>
+
+  <script>
+    let selectedFiles = [];
+
+    // アップロードした画像を読み込みます
+    window.onload = async function() {
+      try {
+        const response = await fetch('https://api.github.com/repos/' + window.location.pathname.split('/')[1] + '/' + window.location.pathname.split('/')[2] + '/contents');
+        const files = await response.json();
+        
+        const grid = document.getElementById('photoGrid');
+        
+        // 画像ファイルだけを抽出して表示
+        files.filter(f => f.name.match(/\.(jpg|jpeg|png|webp)$/i)).forEach(file => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.onclick = () => toggleSelect(card, file.name);
+          
+          const img = document.createElement('img');
+          img.src = file.name;
+          card.appendChild(img);
+          
+          grid.appendChild(card);
+        });
+      } catch (e) {
+        console.error('画像の読み込みに失敗しました', e);
+      }
+    };
+
+    function toggleSelect(card, filename) {
+      if (card.classList.contains('selected')) {
+        card.classList.remove('selected');
+        selectedFiles = selectedFiles.filter(f => f !== filename);
+      } else {
+        if (selectedFiles.length >= 9) {
+          alert('選べるのは9枚までです！');
+          return;
+        }
+        card.classList.add('selected');
+        selectedFiles.push(filename);
+      }
+
+      document.getElementById('count').textContent = selectedFiles.length;
+      document.getElementById('finishBtn').disabled = selectedFiles.length !== 9;
+    }
+
+    function showResult() {
+      const resultGrid = document.getElementById('resultGrid');
+      resultGrid.innerHTML = '';
+      
+      selectedFiles.forEach(file => {
+        const img = document.createElement('img');
+        img.src = file;
+        resultGrid.appendChild(img);
+      });
+
+      const resultArea = document.getElementById('resultArea');
+      resultArea.style.display = 'block';
+      resultArea.scrollIntoView({ behavior: 'smooth' });
+    }
+  </script>
+
+</body>
+</html>
