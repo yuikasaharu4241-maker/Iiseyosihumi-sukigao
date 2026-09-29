@@ -127,10 +127,27 @@
       border-radius: 10px;
       backdrop-filter: blur(2px);
     }
-    /* 1位・2位・3位のバッジ色付け */
     .rank-1 { background: #ff4757; }
     .rank-2 { background: #2ed573; }
     .rank-3 { background: #1e90ff; }
+
+    /* もう一度遊ぶボタン */
+    .retry-btn {
+      margin-top: 20px;
+      background: linear-gradient(90deg, #ff758c, #ff7eb3);
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      font-size: 15px;
+      font-weight: bold;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(255, 117, 140, 0.3);
+      transition: transform 0.1s;
+    }
+    .retry-btn:active {
+      transform: scale(0.95);
+    }
   </style>
 </head>
 <body>
@@ -159,7 +176,10 @@
   <div class="result-container" id="resultArea">
     <div class="result-title">私の<span>好き顔9選</span></div>
     <div class="result-grid" id="resultGrid"></div>
-    <p style="margin-top: 20px; font-size: 12px; color: #888;">スクリーンショットして保存してください✨</p>
+    <p style="margin-top: 15px; font-size: 12px; color: #888;">スクリーンショットして保存してください✨</p>
+
+    <!-- もう一度遊ぶボタン -->
+    <button class="retry-btn" onclick="retryGame()">🔄 もう一度挑戦する</button>
   </div>
 
   <script>
@@ -191,13 +211,24 @@
         return;
       }
 
+      startNewGame();
+    }
+
+    function startNewGame() {
+      scores = {};
+      matchPairs = [];
+      currentMatch = 0;
+
       images.forEach(img => scores[img] = 0);
       generateMatches();
+
+      document.getElementById('resultArea').style.display = 'none';
+      document.getElementById('gameArea').style.display = 'block';
+
       showMatch();
     }
 
     function generateMatches() {
-      // 全画像からランダムペアを作成（約18〜20回対戦）
       for (let i = 0; i < images.length; i++) {
         for (let j = i + 1; j < images.length; j++) {
           matchPairs.push([images[i], images[j]]);
@@ -235,15 +266,12 @@
     function finishGame() {
       document.getElementById('gameArea').style.display = 'none';
 
-      // スコアの高い順にソート（同点の場合はランダム要素で順位固定）
       const sorted = Object.keys(scores).sort((a, b) => {
         return (scores[b] + Math.random() * 0.1) - (scores[a] + Math.random() * 0.1);
       });
 
-      // 表示順序を「お手本風」にする（4位, 5位, 6位 / 2位, 1位, 3位 / 7位, 8位, 9位）
       const top9 = sorted.slice(0, 9);
       
-      // お手本通りの1位が中央にくるレイアウト順に並べ替え
       const displayOrder = [
         { item: top9[3], rank: 4 },
         { item: top9[4], rank: 5 },
@@ -280,11 +308,17 @@
       document.getElementById('resultArea').style.display = 'block';
     }
 
+    function retryGame() {
+      startNewGame();
+    }
+
     initGame();
   </script>
 
 </body>
 </html>
+
+  
 
 
 
