@@ -13,18 +13,10 @@
       margin: 0;
       padding: 20px 10px;
     }
-    h1 {
-      font-size: 22px;
-      margin-bottom: 5px;
-      color: #333;
-    }
-    p {
-      font-size: 13px;
-      color: #666;
-      margin-bottom: 15px;
-    }
+    h1 { font-size: 22px; margin-bottom: 5px; color: #333; }
+    p { font-size: 13px; color: #666; margin-bottom: 15px; }
 
-    /* スタート画面 */
+    /* 1. スタート画面 */
     .start-container {
       max-width: 360px;
       margin: 40px auto;
@@ -34,7 +26,7 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.08);
     }
 
-    /* 2択対決画面 */
+    /* 2. 2択対決画面 */
     .versus-container {
       display: flex;
       justify-content: center;
@@ -51,22 +43,11 @@
       box-shadow: 0 6px 15px rgba(0,0,0,0.12);
       cursor: pointer;
       background: #fff;
-      transition: transform 0.15s, box-shadow 0.15s;
+      transition: transform 0.15s;
     }
-    .choice-card:active {
-      transform: scale(0.95);
-    }
-    .choice-card img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .vs {
-      font-size: 22px;
-      font-weight: 800;
-      color: #ff4757;
-      font-style: italic;
-    }
+    .choice-card:active { transform: scale(0.95); }
+    .choice-card img { width: 100%; height: 100%; object-fit: cover; }
+    .vs { font-size: 22px; font-weight: 800; color: #ff4757; font-style: italic; }
 
     /* プログレスバー */
     .progress-bar {
@@ -85,7 +66,7 @@
       transition: width 0.3s;
     }
 
-    /* ボタン共通 */
+    /* ひとつ戻るボタン */
     .btn {
       background: #fff;
       color: #666;
@@ -95,18 +76,11 @@
       font-weight: bold;
       border-radius: 20px;
       cursor: pointer;
-      transition: all 0.15s;
       margin-bottom: 15px;
     }
-    .btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-    .btn:active:not(:disabled) {
-      transform: scale(0.95);
-    }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    /* 結果画面 */
+    /* 3. 結果画面 */
     .result-container {
       display: none;
       max-width: 380px;
@@ -116,17 +90,9 @@
       border-radius: 20px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.08);
     }
-    .result-title {
-      font-size: 22px;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-    .result-title span {
-      color: #8a2be2;
-      border-bottom: 3px solid #8a2be2;
-    }
+    .result-title { font-size: 22px; font-weight: bold; margin-bottom: 20px; }
+    .result-title span { color: #8a2be2; border-bottom: 3px solid #8a2be2; }
 
-    /* 3x3 グリッドレイアウト */
     .result-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -140,29 +106,22 @@
       box-shadow: 0 3px 8px rgba(0,0,0,0.1);
       background: #eee;
     }
-    .result-card img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    /* 順位バッジ */
+    .result-card img { width: 100%; height: 100%; object-fit: cover; }
     .rank-badge {
       position: absolute;
-      top: 6px;
-      left: 6px;
+      top: 6px; left: 6px;
       background: rgba(0, 0, 0, 0.75);
       color: #fff;
       font-size: 11px;
       font-weight: bold;
       padding: 2px 7px;
       border-radius: 10px;
-      backdrop-filter: blur(2px);
     }
     .rank-1 { background: #ff4757; }
     .rank-2 { background: #2ed573; }
     .rank-3 { background: #1e90ff; }
 
-    /* ピンク色のアクションボタン */
+    /* メインボタン */
     .main-btn {
       background: linear-gradient(90deg, #ff758c, #ff7eb3);
       color: white;
@@ -173,10 +132,6 @@
       border-radius: 25px;
       cursor: pointer;
       box-shadow: 0 4px 10px rgba(255, 117, 140, 0.3);
-      transition: transform 0.1s;
-    }
-    .main-btn:active {
-      transform: scale(0.95);
     }
   </style>
 </head>
@@ -186,7 +141,7 @@
   <div class="start-container" id="startArea">
     <h1>私の好き顔9選</h1>
     <p>2択の対決から直感で選んで、<br>あなたの推し顔TOP9を決定しよう！</p>
-    <button class="main-btn" onclick="startNewGame()">🎮 スタート</button>
+    <button class="main-btn" id="startBtn" onclick="onClickStart()">🎮 スタート</button>
   </div>
 
   <!-- 2. 対決エリア -->
@@ -198,7 +153,6 @@
       <div class="progress-fill" id="progress"></div>
     </div>
 
-    <!-- 1つ前に戻るボタン -->
     <button class="btn" id="backBtn" onclick="undoSelect()" disabled>↩️ ひとつ戻る</button>
 
     <div class="versus-container">
@@ -218,8 +172,7 @@
     <div class="result-grid" id="resultGrid"></div>
     <p style="margin-top: 15px; font-size: 12px; color: #888;">スクリーンショットして保存してください✨</p>
 
-    <!-- もう一度遊ぶボタン -->
-    <button class="main-btn" style="margin-top: 15px;" onclick="retryGame()">🔄 もう一度挑戦する</button>
+    <button class="main-btn" style="margin-top: 15px;" onclick="onClickStart()">🔄 もう一度挑戦する</button>
   </div>
 
   <script>
@@ -227,9 +180,10 @@
     let scores = {};
     let matchPairs = [];
     let currentMatch = 0;
-    let history = []; // 選択履歴
+    let history = [];
 
-    async function initGame() {
+    // 最初に画像一覧を裏で読み込んでおく
+    async function fetchImages() {
       const pathParts = window.location.pathname.split('/').filter(Boolean);
       const user = window.location.hostname.split('.')[0];
       const repo = pathParts[0] || '';
@@ -246,18 +200,26 @@
       } catch (e) {
         console.error(e);
       }
-
-      if (images.length < 2) {
-        alert("画像が読み込めませんでした。画像ファイルが正しく入っているか確認してください。");
-      }
     }
 
-    function startNewGame() {
+    // スタートボタンが押されたときの処理
+    async function onClickStart() {
+      // まだ画像が読み込めていなければ読み込む
+      if (images.length === 0) {
+        document.getElementById('startBtn').innerText = "読み込み中...";
+        await fetchImages();
+      }
+
       if (images.length < 2) {
-        alert("画像が足りません。");
+        alert("画像が足りません。画像を追加してください！");
+        document.getElementById('startBtn').innerText = "🎮 スタート";
         return;
       }
 
+      startNewGame();
+    }
+
+    function startNewGame() {
       scores = {};
       matchPairs = [];
       currentMatch = 0;
@@ -331,7 +293,6 @@
 
       const top9 = sorted.slice(0, 9);
       
-      // 中央1位（4,5,6 / 2,1,3 / 7,8,9）の配置
       const displayOrder = [
         { item: top9[3], rank: 4 },
         { item: top9[4], rank: 5 },
@@ -368,17 +329,9 @@
       document.getElementById('resultArea').style.display = 'block';
     }
 
-    function retryGame() {
-      startNewGame();
-    }
-
-    initGame();
+    // 最初に裏で画像一覧を取得開始
+    fetchImages();
   </script>
 
 </body>
 </html>
-
-
-
-
-    
