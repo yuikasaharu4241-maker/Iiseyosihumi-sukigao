@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>私の好き顔9選</title>
+  <title>好き顔2択メーカー</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -13,51 +13,59 @@
       margin: 0;
       padding: 20px 10px;
     }
-    h1 {
-      font-size: 22px;
-      margin-bottom: 5px;
-    }
-    p {
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 20px;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
+    h1 { font-size: 20px; margin-bottom: 5px; }
+    p { font-size: 14px; color: #666; margin-bottom: 20px; }
+    
+    .versus-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
       max-width: 400px;
-      margin: 0 auto 30px;
+      margin: 0 auto 20px;
     }
-    .card {
-      position: relative;
+    .choice-card {
+      flex: 1;
       aspect-ratio: 1;
-      border-radius: 8px;
+      border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
       cursor: pointer;
       background: #eee;
+      transition: transform 0.1s;
     }
-    .card img {
+    .choice-card:active {
+      transform: scale(0.95);
+    }
+    .choice-card img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
-    .card.selected::after {
-      content: '✓';
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(255, 105, 180, 0.6);
-      color: white;
-      font-size: 32px;
+    .vs {
+      font-size: 20px;
       font-weight: bold;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      color: #ff69b4;
     }
+
+    .progress-bar {
+      width: 80%;
+      max-width: 300px;
+      height: 8px;
+      background: #ddd;
+      border-radius: 4px;
+      margin: 0 auto 30px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #ff69b4;
+      transition: width 0.3s;
+    }
+
     .result-container {
       display: none;
-      margin-top: 30px;
     }
     .result-grid {
       display: grid;
@@ -65,11 +73,11 @@
       gap: 5px;
       width: 300px;
       height: 300px;
-      margin: 0 auto;
+      margin: 20px auto;
       background: #fff;
       padding: 10px;
       border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
     }
     .result-grid img {
       width: 100%;
@@ -77,117 +85,135 @@
       object-fit: cover;
       border-radius: 4px;
     }
-    .btn {
-      background-color: #ff69b4;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 25px;
-      cursor: pointer;
-      margin-top: 20px;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-    }
-    .btn:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
   </style>
 </head>
 <body>
 
-  <h1>好きな顔を選ぼう！</h1>
-  <p>一覧から画像をタップして <strong>9枚</strong> 選んでください（<span id="count">0</span>/9）</p>
+  <div id="gameArea">
+    <h1>どっちが好み？</h1>
+    <p>直感で好きな方の写真をタップしてください！</p>
 
-  <div class="grid" id="photoGrid"></div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress"></div>
+    </div>
 
-  <button class="btn" id="finishBtn" disabled onclick="showResult()">9選を完成させる！</button>
+    <div class="versus-container">
+      <div class="choice-card" onclick="selectWinner(0)">
+        <img id="img0" src="" alt="Left">
+      </div>
+      <div class="vs">VS</div>
+      <div class="choice-card" onclick="selectWinner(1)">
+        <img id="img1" src="" alt="Right">
+      </div>
+    </div>
+  </div>
 
   <div class="result-container" id="resultArea">
     <h2>✨ あなたの好き顔9選 ✨</h2>
     <div class="result-grid" id="resultGrid"></div>
+    <p style="margin-top: 15px;">スクリーンショットして保存してね！</p>
   </div>
 
   <script>
-    let selectedFiles = [];
+    let images = [];
+    let scores = {};
+    let matchPairs = [];
+    let currentMatch = 0;
 
-    async function loadImages() {
-      const grid = document.getElementById('photoGrid');
-      
-      // リポジトリ情報をURLから取得
+    async function initGame() {
       const pathParts = window.location.pathname.split('/').filter(Boolean);
       const user = window.location.hostname.split('.')[0];
       const repo = pathParts[0] || '';
 
-      // APIで画像ファイル名を取得する処理
       try {
         const res = await fetch(`https://api.github.com/repos/${user}/${repo}/contents`);
         const files = await res.json();
         
         if (Array.isArray(files)) {
-          const imageFiles = files.filter(f => f.type === 'file' && f.name.match(/\.(jpg|jpeg|png|webp|gif|JPG|PNG|JPEG)$/i));
-          
-          if (imageFiles.length > 0) {
-            imageFiles.forEach(file => createCard(grid, file.name));
-            return;
-          }
+          images = files
+            .filter(f => f.type === 'file' && f.name.match(/\.(jpg|jpeg|png|webp|gif|JPG|PNG|JPEG)$/i))
+            .map(f => f.name);
         }
       } catch (e) {
-        console.log("API読み込み失敗。直接表示を試みます。");
+        console.error(e);
       }
+
+      if (images.length < 2) {
+        alert("画像が足りません。");
+        return;
+      }
+
+      // スコア初期化
+      images.forEach(img => scores[img] = 0);
+
+      // 対戦ペアをランダムに作成（約15〜20回対戦）
+      generateMatches();
+      showMatch();
     }
 
-    function createCard(container, fileName) {
-      const card = document.createElement('div');
-      card.className = 'card';
-      
-      const img = document.createElement('img');
-      img.src = fileName;
-      // 画像が読み込めなかったカードは非表示にする
-      img.onerror = () => card.remove();
-
-      card.onclick = () => toggleSelect(card, fileName);
-      card.appendChild(img);
-      container.appendChild(card);
-    }
-
-    function toggleSelect(card, filename) {
-      if (card.classList.contains('selected')) {
-        card.classList.remove('selected');
-        selectedFiles = selectedFiles.filter(f => f !== filename);
-      } else {
-        if (selectedFiles.length >= 9) {
-          alert('選べるのは9枚までです！');
-          return;
+    function generateMatches() {
+      // 簡易的な総当たり/ランダムマッチング
+      for (let i = 0; i < images.length; i++) {
+        for (let j = i + 1; j < images.length; j++) {
+          matchPairs.push([images[i], images[j]]);
         }
-        card.classList.add('selected');
-        selectedFiles.push(filename);
       }
-
-      document.getElementById('count').textContent = selectedFiles.length;
-      document.getElementById('finishBtn').disabled = selectedFiles.length !== 9;
+      // ペアをシャッフル
+      matchPairs.sort(() => Math.random() - 0.5);
+      // 対戦数が多すぎないように調整（最大20戦）
+      if (matchPairs.length > 20) {
+        matchPairs = matchPairs.slice(0, 20);
+      }
     }
 
-    function showResult() {
+    function showMatch() {
+      if (currentMatch >= matchPairs.length) {
+        finishGame();
+        return;
+      }
+
+      const pair = matchPairs[currentMatch];
+      document.getElementById('img0').src = pair[0];
+      document.getElementById('img1').src = pair[1];
+
+      // プログレスバー更新
+      const percent = (currentMatch / matchPairs.length) * 100;
+      document.getElementById('progress').style.width = percent + '%';
+    }
+
+    function selectWinner(index) {
+      const pair = matchPairs[currentMatch];
+      const winner = pair[index];
+      scores[winner] += 1;
+
+      currentMatch++;
+      showMatch();
+    }
+
+    function finishGame() {
+      document.getElementById('gameArea').style.display = 'none';
+
+      // スコアが高い順にソートして上位9枚を取得
+      const sorted = Object.keys(scores).sort((a, b) => scores[b] - scores[a]);
+      const top9 = sorted.slice(0, 9);
+
       const resultGrid = document.getElementById('resultGrid');
       resultGrid.innerHTML = '';
-      
-      selectedFiles.forEach(file => {
+
+      top9.forEach(imgSrc => {
         const img = document.createElement('img');
-        img.src = file;
+        img.src = imgSrc;
         resultGrid.appendChild(img);
       });
 
-      const resultArea = document.getElementById('resultArea');
-      resultArea.style.display = 'block';
-      resultArea.scrollIntoView({ behavior: 'smooth' });
+      document.getElementById('resultArea').style.display = 'block';
     }
 
-    loadImages();
+    initGame();
   </script>
 
 </body>
 </html>
+
 
     
