@@ -106,16 +106,75 @@
       box-shadow: 0 3px 8px rgba(0,0,0,0.1);
       background: #eee;
     }
+        /* 2択対決画面 */
+    .versus-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      max-width: 360px;
+      margin: 0 auto 15px;
+    }
+    .choice-card {
+      flex: 1;
+      aspect-ratio: 1;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.12);
+      cursor: pointer;
+      background: #f8f9fa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s;
+    }
+    .choice-card:active { transform: scale(0.95); }
+    .choice-card img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+    .vs { font-size: 22px; font-weight: 800; color: #ff4757; font-style: italic; }
+
+    /* 結果画面 */
+    .result-container {
+      display: none;
+      max-width: 380px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 25px 15px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    }
+    .result-title { font-size: 22px; font-weight: bold; margin-bottom: 20px; }
+    .result-title span { color: #8a2be2; border-bottom: 3px solid #8a2be2; }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
     .result-card {
-  position: relative;
-  aspect-ratio: 1;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
-  background-color: #f8f9fa;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      background-color: #f8f9fa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .result-card img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+
 }
 .result-card img {
   max-width: 100%;
