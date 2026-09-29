@@ -3,36 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>好き顔2択メーカー</title>
+  <title>私の好き顔9選</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: #f8f9fa;
+      background-color: #f0f2f5;
       color: #333;
       text-align: center;
       margin: 0;
       padding: 20px 10px;
     }
-    h1 { font-size: 20px; margin-bottom: 5px; }
-    p { font-size: 14px; color: #666; margin-bottom: 20px; }
-    
+    h1 {
+      font-size: 22px;
+      margin-bottom: 5px;
+      color: #333;
+    }
+    p {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 15px;
+    }
+
+    /* 2択対決画面 */
     .versus-container {
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 15px;
-      max-width: 400px;
+      gap: 12px;
+      max-width: 360px;
       margin: 0 auto 20px;
     }
     .choice-card {
       flex: 1;
       aspect-ratio: 1;
-      border-radius: 12px;
+      border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.12);
       cursor: pointer;
-      background: #eee;
-      transition: transform 0.1s;
+      background: #fff;
+      transition: transform 0.15s, box-shadow 0.15s;
     }
     .choice-card:active {
       transform: scale(0.95);
@@ -43,55 +52,93 @@
       object-fit: cover;
     }
     .vs {
-      font-size: 20px;
-      font-weight: bold;
-      color: #ff69b4;
+      font-size: 22px;
+      font-weight: 800;
+      color: #ff4757;
+      font-style: italic;
     }
 
+    /* プログレスバー */
     .progress-bar {
       width: 80%;
       max-width: 300px;
       height: 8px;
-      background: #ddd;
+      background: #e0e0e0;
       border-radius: 4px;
-      margin: 0 auto 30px;
+      margin: 0 auto 20px;
       overflow: hidden;
     }
     .progress-fill {
       height: 100%;
       width: 0%;
-      background: #ff69b4;
+      background: linear-gradient(90deg, #ff758c, #ff7eb3);
       transition: width 0.3s;
     }
 
+    /* 結果画面 */
     .result-container {
       display: none;
+      max-width: 380px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 25px 15px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
     }
+    .result-title {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    .result-title span {
+      color: #8a2be2;
+      border-bottom: 3px solid #8a2be2;
+    }
+
+    /* 3x3 グリッドレイアウト */
     .result-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 5px;
-      width: 300px;
-      height: 300px;
-      margin: 20px auto;
-      background: #fff;
-      padding: 10px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      gap: 10px;
     }
-    .result-grid img {
+    .result-card {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      background: #eee;
+    }
+    .result-card img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      border-radius: 4px;
     }
+    /* 順位バッジ */
+    .rank-badge {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 2px 7px;
+      border-radius: 10px;
+      backdrop-filter: blur(2px);
+    }
+    /* 1位・2位・3位のバッジ色付け */
+    .rank-1 { background: #ff4757; }
+    .rank-2 { background: #2ed573; }
+    .rank-3 { background: #1e90ff; }
   </style>
 </head>
 <body>
 
+  <!-- 対決エリア -->
   <div id="gameArea">
-    <h1>どっちが好み？</h1>
-    <p>直感で好きな方の写真をタップしてください！</p>
+    <h1>直感で好きな方を選択！</h1>
+    <p>どちらの顔が好みですか？（タップして選択）</p>
 
     <div class="progress-bar">
       <div class="progress-fill" id="progress"></div>
@@ -108,10 +155,11 @@
     </div>
   </div>
 
+  <!-- 結果表示エリア -->
   <div class="result-container" id="resultArea">
-    <h2>✨ あなたの好き顔9選 ✨</h2>
+    <div class="result-title">私の<span>好き顔9選</span></div>
     <div class="result-grid" id="resultGrid"></div>
-    <p style="margin-top: 15px;">スクリーンショットして保存してね！</p>
+    <p style="margin-top: 20px; font-size: 12px; color: #888;">スクリーンショットして保存してください✨</p>
   </div>
 
   <script>
@@ -139,28 +187,23 @@
       }
 
       if (images.length < 2) {
-        alert("画像が足りません。");
+        alert("画像が読み込めませんでした。画像ファイルが正しく入っているか確認してください。");
         return;
       }
 
-      // スコア初期化
       images.forEach(img => scores[img] = 0);
-
-      // 対戦ペアをランダムに作成（約15〜20回対戦）
       generateMatches();
       showMatch();
     }
 
     function generateMatches() {
-      // 簡易的な総当たり/ランダムマッチング
+      // 全画像からランダムペアを作成（約18〜20回対戦）
       for (let i = 0; i < images.length; i++) {
         for (let j = i + 1; j < images.length; j++) {
           matchPairs.push([images[i], images[j]]);
         }
       }
-      // ペアをシャッフル
       matchPairs.sort(() => Math.random() - 0.5);
-      // 対戦数が多すぎないように調整（最大20戦）
       if (matchPairs.length > 20) {
         matchPairs = matchPairs.slice(0, 20);
       }
@@ -176,7 +219,6 @@
       document.getElementById('img0').src = pair[0];
       document.getElementById('img1').src = pair[1];
 
-      // プログレスバー更新
       const percent = (currentMatch / matchPairs.length) * 100;
       document.getElementById('progress').style.width = percent + '%';
     }
@@ -193,17 +235,46 @@
     function finishGame() {
       document.getElementById('gameArea').style.display = 'none';
 
-      // スコアが高い順にソートして上位9枚を取得
-      const sorted = Object.keys(scores).sort((a, b) => scores[b] - scores[a]);
+      // スコアの高い順にソート（同点の場合はランダム要素で順位固定）
+      const sorted = Object.keys(scores).sort((a, b) => {
+        return (scores[b] + Math.random() * 0.1) - (scores[a] + Math.random() * 0.1);
+      });
+
+      // 表示順序を「お手本風」にする（4位, 5位, 6位 / 2位, 1位, 3位 / 7位, 8位, 9位）
       const top9 = sorted.slice(0, 9);
+      
+      // お手本通りの1位が中央にくるレイアウト順に並べ替え
+      const displayOrder = [
+        { item: top9[3], rank: 4 },
+        { item: top9[4], rank: 5 },
+        { item: top9[5], rank: 6 },
+        { item: top9[1], rank: 2 },
+        { item: top9[0], rank: 1 },
+        { item: top9[2], rank: 3 },
+        { item: top9[6], rank: 7 },
+        { item: top9[7], rank: 8 },
+        { item: top9[8], rank: 9 }
+      ];
 
       const resultGrid = document.getElementById('resultGrid');
       resultGrid.innerHTML = '';
 
-      top9.forEach(imgSrc => {
+      displayOrder.forEach(({ item, rank }) => {
+        if (!item) return;
+
+        const card = document.createElement('div');
+        card.className = 'result-card';
+
         const img = document.createElement('img');
-        img.src = imgSrc;
-        resultGrid.appendChild(img);
+        img.src = item;
+
+        const badge = document.createElement('div');
+        badge.className = `rank-badge ${rank <= 3 ? 'rank-' + rank : ''}`;
+        badge.textContent = `${rank}位`;
+
+        card.appendChild(img);
+        card.appendChild(badge);
+        resultGrid.appendChild(card);
       });
 
       document.getElementById('resultArea').style.display = 'block';
@@ -214,6 +285,7 @@
 
 </body>
 </html>
+
 
 
     
