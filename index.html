@@ -24,6 +24,16 @@
       margin-bottom: 15px;
     }
 
+    /* スタート画面 */
+    .start-container {
+      max-width: 360px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 30px 20px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    }
+
     /* 2択対決画面 */
     .versus-container {
       display: flex;
@@ -31,7 +41,7 @@
       align-items: center;
       gap: 12px;
       max-width: 360px;
-      margin: 0 auto 20px;
+      margin: 0 auto 15px;
     }
     .choice-card {
       flex: 1;
@@ -65,7 +75,7 @@
       height: 8px;
       background: #e0e0e0;
       border-radius: 4px;
-      margin: 0 auto 20px;
+      margin: 0 auto 10px;
       overflow: hidden;
     }
     .progress-fill {
@@ -73,6 +83,27 @@
       width: 0%;
       background: linear-gradient(90deg, #ff758c, #ff7eb3);
       transition: width 0.3s;
+    }
+
+    /* ボタン共通 */
+    .btn {
+      background: #fff;
+      color: #666;
+      border: 1px solid #ccc;
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: bold;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-bottom: 15px;
+    }
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .btn:active:not(:disabled) {
+      transform: scale(0.95);
     }
 
     /* 結果画面 */
@@ -131,9 +162,8 @@
     .rank-2 { background: #2ed573; }
     .rank-3 { background: #1e90ff; }
 
-    /* もう一度遊ぶボタン */
-    .retry-btn {
-      margin-top: 20px;
+    /* ピンク色のアクションボタン */
+    .main-btn {
       background: linear-gradient(90deg, #ff758c, #ff7eb3);
       color: white;
       border: none;
@@ -145,21 +175,31 @@
       box-shadow: 0 4px 10px rgba(255, 117, 140, 0.3);
       transition: transform 0.1s;
     }
-    .retry-btn:active {
+    .main-btn:active {
       transform: scale(0.95);
     }
   </style>
 </head>
 <body>
 
-  <!-- 対決エリア -->
-  <div id="gameArea">
+  <!-- 1. スタート画面 -->
+  <div class="start-container" id="startArea">
+    <h1>私の好き顔9選</h1>
+    <p>2択の対決から直感で選んで、<br>あなたの推し顔TOP9を決定しよう！</p>
+    <button class="main-btn" onclick="startNewGame()">🎮 スタート</button>
+  </div>
+
+  <!-- 2. 対決エリア -->
+  <div id="gameArea" style="display: none;">
     <h1>直感で好きな方を選択！</h1>
     <p>どちらの顔が好みですか？（タップして選択）</p>
 
     <div class="progress-bar">
       <div class="progress-fill" id="progress"></div>
     </div>
+
+    <!-- 1つ前に戻るボタン -->
+    <button class="btn" id="backBtn" onclick="undoSelect()" disabled>↩️ ひとつ戻る</button>
 
     <div class="versus-container">
       <div class="choice-card" onclick="selectWinner(0)">
@@ -172,14 +212,14 @@
     </div>
   </div>
 
-  <!-- 結果表示エリア -->
+  <!-- 3. 結果表示エリア -->
   <div class="result-container" id="resultArea">
     <div class="result-title">私の<span>好き顔9選</span></div>
     <div class="result-grid" id="resultGrid"></div>
     <p style="margin-top: 15px; font-size: 12px; color: #888;">スクリーンショットして保存してください✨</p>
 
     <!-- もう一度遊ぶボタン -->
-    <button class="retry-btn" onclick="retryGame()">🔄 もう一度挑戦する</button>
+    <button class="main-btn" style="margin-top: 15px;" onclick="retryGame()">🔄 もう一度挑戦する</button>
   </div>
 
   <script>
@@ -187,6 +227,7 @@
     let scores = {};
     let matchPairs = [];
     let currentMatch = 0;
+    let history = []; // 選択履歴
 
     async function initGame() {
       const pathParts = window.location.pathname.split('/').filter(Boolean);
@@ -208,20 +249,24 @@
 
       if (images.length < 2) {
         alert("画像が読み込めませんでした。画像ファイルが正しく入っているか確認してください。");
-        return;
       }
-
-      startNewGame();
     }
 
     function startNewGame() {
+      if (images.length < 2) {
+        alert("画像が足りません。");
+        return;
+      }
+
       scores = {};
       matchPairs = [];
       currentMatch = 0;
+      history = [];
 
       images.forEach(img => scores[img] = 0);
       generateMatches();
 
+      document.getElementById('startArea').style.display = 'none';
       document.getElementById('resultArea').style.display = 'none';
       document.getElementById('gameArea').style.display = 'block';
 
@@ -252,14 +297,28 @@
 
       const percent = (currentMatch / matchPairs.length) * 100;
       document.getElementById('progress').style.width = percent + '%';
+
+      document.getElementById('backBtn').disabled = currentMatch === 0;
     }
 
     function selectWinner(index) {
       const pair = matchPairs[currentMatch];
       const winner = pair[index];
+      
+      history.push(winner);
       scores[winner] += 1;
 
       currentMatch++;
+      showMatch();
+    }
+
+    function undoSelect() {
+      if (currentMatch === 0 || history.length === 0) return;
+
+      const lastWinner = history.pop();
+      scores[lastWinner] -= 1;
+
+      currentMatch--;
       showMatch();
     }
 
@@ -272,6 +331,7 @@
 
       const top9 = sorted.slice(0, 9);
       
+      // 中央1位（4,5,6 / 2,1,3 / 7,8,9）の配置
       const displayOrder = [
         { item: top9[3], rank: 4 },
         { item: top9[4], rank: 5 },
@@ -318,7 +378,6 @@
 </body>
 </html>
 
-  
 
 
 
