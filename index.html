@@ -46,12 +46,7 @@
       transition: transform 0.15s;
     }
     .choice-card:active { transform: scale(0.95); }
-    .choice-card img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center 20%; /* 頭や顔が見切れにくいように少し上寄りに配置 */
-    }
+    .choice-card img { width: 100%; height: 100%; object-fit: cover; }
     .vs { font-size: 22px; font-weight: 800; color: #ff4757; font-style: italic; }
 
     /* プログレスバー */
@@ -111,12 +106,7 @@
       box-shadow: 0 3px 8px rgba(0,0,0,0.1);
       background: #eee;
     }
-    .result-card img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center 20%; /* 結果表示でも顔を中心に捉えるよう調整 */
-    }
+    .result-card img { width: 100%; height: 100%; object-fit: cover; }
     .rank-badge {
       position: absolute;
       top: 6px; left: 6px;
@@ -126,7 +116,6 @@
       font-weight: bold;
       padding: 2px 7px;
       border-radius: 10px;
-      z-index: 1;
     }
     .rank-1 { background: #ff4757; }
     .rank-2 { background: #2ed573; }
@@ -193,6 +182,7 @@
     let currentMatch = 0;
     let history = [];
 
+    // 最初に画像一覧を裏で読み込んでおく
     async function fetchImages() {
       const pathParts = window.location.pathname.split('/').filter(Boolean);
       const user = window.location.hostname.split('.')[0];
@@ -212,7 +202,9 @@
       }
     }
 
+    // スタートボタンが押されたときの処理
     async function onClickStart() {
+      // まだ画像が読み込めていなければ読み込む
       if (images.length === 0) {
         document.getElementById('startBtn').innerText = "読み込み中...";
         await fetchImages();
@@ -337,6 +329,7 @@
       document.getElementById('resultArea').style.display = 'block';
     }
 
+    // 最初に裏で画像一覧を取得開始
     fetchImages();
   </script>
 
